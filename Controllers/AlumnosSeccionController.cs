@@ -29,7 +29,7 @@ public class AlumnosSeccionController : ControllerBase
                 (sa, alumno) => new
                 {
                     alumno.Id,
-                    alumno.Name,
+                    alumno.Nombre,
                     alumno.Sexo,
                     Edad = DateTime.Today.Year - alumno.FechaNacimiento.Year
                 })

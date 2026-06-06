@@ -20,6 +20,6 @@ public class ColegioDbContextFactory : IDesignTimeDbContextFactory<ColegioDbCont
         var connectionString = config.GetConnectionString("DefaultConnection");
         optionsBuilder.UseSqlServer(connectionString);
 
-        return new ColegioDbContext(optionsBuilder.Options);
+        return new ColegioDbContext(optionsBuilder.Options, new HttpContextAccessor());
     }
 }

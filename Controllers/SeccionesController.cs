@@ -37,17 +37,17 @@ public class SeccionesController : ControllerBase
         {
             IdCurso = request.IdCurso,
             IdProfesorEncargado = request.IdProfesorEncargado,
-            Name = request.Name,
+            Nombre = request.Nombre,
             FechaInicio = request.FechaInicio,
             FechaFin = request.FechaFin,
             CreatedBy = request.CreatedBy,
             Status = request.Status
         };
-        if (string.IsNullOrWhiteSpace(seccion.Name) || seccion.IdCurso == Guid.Empty || seccion.IdProfesorEncargado == Guid.Empty || string.IsNullOrWhiteSpace(seccion.CreatedBy) || string.IsNullOrWhiteSpace(seccion.Status))
+        if (string.IsNullOrWhiteSpace(seccion.Nombre) || seccion.IdCurso == Guid.Empty || seccion.IdProfesorEncargado == Guid.Empty || string.IsNullOrWhiteSpace(seccion.CreatedBy) || string.IsNullOrWhiteSpace(seccion.Status))
         {
             return BadRequest("Faltan campos obligatorios");
         }
-        if (seccion.Name == "string" || seccion.CreatedBy == "string" || seccion.Status == "string")
+        if (seccion.Nombre == "string" || seccion.CreatedBy == "string" || seccion.Status == "string")
         {
             return BadRequest("Valores de prueba no permitidos");
         }
@@ -69,7 +69,7 @@ public class SeccionesController : ControllerBase
         {   
             return BadRequest("Fecha de inicio debe ser anterior a fecha de fin");
         }
-        if (await _context.Secciones.AnyAsync(s => s.Name == seccion.Name && s.Id != seccion.Id && s.IdCurso == seccion.IdCurso))
+        if (await _context.Secciones.AnyAsync(s => s.Nombre == seccion.Nombre && s.Id != seccion.Id && s.IdCurso == seccion.IdCurso))
         {
             return BadRequest("El nombre de la sección ya existe en este curso");
         }
@@ -83,11 +83,11 @@ public class SeccionesController : ControllerBase
     public async Task<IActionResult> Put(Guid id, Seccion seccion)
     {
         if (id != seccion.Id) return BadRequest();
-        if (string.IsNullOrWhiteSpace(seccion.Name) || seccion.IdCurso == Guid.Empty || seccion.IdProfesorEncargado == Guid.Empty || string.IsNullOrWhiteSpace(seccion.CreatedBy) || string.IsNullOrWhiteSpace(seccion.Status))
+        if (string.IsNullOrWhiteSpace(seccion.Nombre) || seccion.IdCurso == Guid.Empty || seccion.IdProfesorEncargado == Guid.Empty || string.IsNullOrWhiteSpace(seccion.CreatedBy) || string.IsNullOrWhiteSpace(seccion.Status))
         {
             return BadRequest("Faltan campos obligatorios");
         }
-        if (seccion.Name == "string" || seccion.CreatedBy == "string" || seccion.Status == "string")
+        if (seccion.Nombre == "string" || seccion.CreatedBy == "string" || seccion.Status == "string")
         {
             return BadRequest("Valores de prueba no permitidos");
         }
@@ -109,7 +109,7 @@ public class SeccionesController : ControllerBase
         {
             return BadRequest("Fecha de inicio debe ser anterior a fecha de fin");
         }
-        if (await _context.Secciones.AnyAsync(s => s.Name == seccion.Name && s.Id != seccion.Id && s.IdCurso == seccion.IdCurso))
+        if (await _context.Secciones.AnyAsync(s => s.Nombre == seccion.Nombre && s.Id != seccion.Id && s.IdCurso == seccion.IdCurso))
         {
             return BadRequest("El nombre de la sección ya existe en este curso");
         }
@@ -128,6 +128,15 @@ public class SeccionesController : ControllerBase
     {
         var seccion = await _context.Secciones.FindAsync(id);
         if (seccion == null) return NotFound();
+        if (await _context.SeccionesAlumnos.AnyAsync(sa => sa.IdSeccion == id))
+        {
+            return BadRequest("No se puede eliminar la sección porque tiene alumnos inscritos");
+        }
+        if (await _context.AsignaturasSecciones.AnyAsync(a => a.IdSeccion == id))
+        {
+            return BadRequest("No se puede eliminar la sección porque tiene asignaturas asignadas");
+        }
+        _context.Entry(seccion).State = EntityState.Deleted;
         _context.Secciones.Remove(seccion);
         await _context.SaveChangesAsync();
         return NoContent();

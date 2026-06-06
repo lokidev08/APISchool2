@@ -44,11 +44,56 @@ public class ProfesoresController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Profesor>> Get(Guid id)
+    public async Task<ActionResult<object>> Get(Guid id)
     {
-        var profesor = await _context.Profesores.FindAsync(id);
-        if (profesor == null) return NotFound();
-        return profesor;
+        var profesorDetalle = await _context.Profesores
+            .Where(p => p.Id == id)
+            .Select(p => new
+            {
+                p.Id,
+                p.Nombre,
+                p.Apellido,
+                p.Sexo,
+                p.Cedula,
+                p.CreatedBy,
+                p.Status,
+                p.CreatedAt,
+                SeccionesEncargadas = _context.Secciones
+                    .Where(s => s.IdProfesorEncargado == p.Id)
+                    .Select(s => new
+                    {
+                        s.Id,
+                        s.Nombre,
+                        Curso = _context.Cursos.Where(c => c.Id == s.IdCurso).Select(c => c.Nombre).FirstOrDefault()
+                    })
+                    .ToList(),
+                CursosConMaterias = _context.AsignaturasSecciones
+                    .Where(asg => asg.IdProfesor == p.Id)
+                    .Join(_context.Secciones,
+                        asg => asg.IdSeccion,
+                        s => s.Id,
+                        (asg, s) => new { asg, s })
+                    .Join(_context.Cursos,
+                        temp => temp.s.IdCurso,
+                        c => c.Id,
+                        (temp, c) => new { temp.asg, temp.s, c })
+                    .Join(_context.Asignaturas,
+                        temp => temp.asg.IdAsignatura,
+                        a => a.Id,
+                        (temp, a) => new
+                        {
+                            temp.asg.Id,
+                            Seccion = temp.s.Nombre,
+                            Curso = temp.c.Nombre,
+                            Materia = a.Nombre
+                        })
+                    .ToList()
+            })
+            .SingleOrDefaultAsync();
+
+        if (profesorDetalle == null) return NotFound();
+
+        return Ok(profesorDetalle);
     }
 
     [HttpPost]
@@ -56,18 +101,18 @@ public class ProfesoresController : ControllerBase
     {
         var profesor = new Profesor
         {
-            Name = request.Name,
+            Nombre = request.Nombre,
             Apellido = request.Apellido,
             Sexo = request.Sexo,
             Cedula = request.Cedula,
             CreatedBy = request.CreatedBy,
             Status = request.Status
         };
-        if (string.IsNullOrWhiteSpace(profesor.Name) || string.IsNullOrWhiteSpace(profesor.Apellido) || string.IsNullOrWhiteSpace(profesor.Sexo) || string.IsNullOrWhiteSpace(profesor.Cedula) || string.IsNullOrWhiteSpace(profesor.CreatedBy) || string.IsNullOrWhiteSpace(profesor.Status))
+        if (string.IsNullOrWhiteSpace(profesor.Nombre) || string.IsNullOrWhiteSpace(profesor.Apellido) || string.IsNullOrWhiteSpace(profesor.Sexo) || string.IsNullOrWhiteSpace(profesor.Cedula) || string.IsNullOrWhiteSpace(profesor.CreatedBy) || string.IsNullOrWhiteSpace(profesor.Status))
         {
             return BadRequest("Faltan campos obligatorios");
         }
-        if (profesor.Name == "string" || profesor.Apellido == "string" || profesor.Sexo == "string" || profesor.Cedula == "string" || profesor.CreatedBy == "string" || profesor.Status == "string")
+        if (profesor.Nombre == "string" || profesor.Apellido == "string" || profesor.Sexo == "string" || profesor.Cedula == "string" || profesor.CreatedBy == "string" || profesor.Status == "string")
         {
             return BadRequest("Valores de prueba no permitidos");
         }
@@ -99,11 +144,11 @@ public class ProfesoresController : ControllerBase
     public async Task<IActionResult> Put(Guid id, Profesor profesor)
     {
         if (id != profesor.Id) return BadRequest();
-        if (string.IsNullOrWhiteSpace(profesor.Name) || string.IsNullOrWhiteSpace(profesor.Apellido) || string.IsNullOrWhiteSpace(profesor.Sexo) || string.IsNullOrWhiteSpace(profesor.Cedula) || string.IsNullOrWhiteSpace(profesor.CreatedBy) || string.IsNullOrWhiteSpace(profesor.Status))
+        if (string.IsNullOrWhiteSpace(profesor.Nombre) || string.IsNullOrWhiteSpace(profesor.Apellido) || string.IsNullOrWhiteSpace(profesor.Sexo) || string.IsNullOrWhiteSpace(profesor.Cedula) || string.IsNullOrWhiteSpace(profesor.CreatedBy) || string.IsNullOrWhiteSpace(profesor.Status))
         {
             return BadRequest("Faltan campos obligatorios");
         }
-        if (profesor.Name == "string" || profesor.Apellido == "string" || profesor.Sexo == "string" || profesor.Cedula == "string" || profesor.CreatedBy == "string" || profesor.Status == "string")
+        if (profesor.Nombre == "string" || profesor.Apellido == "string" || profesor.Sexo == "string" || profesor.Cedula == "string" || profesor.CreatedBy == "string" || profesor.Status == "string")
         {
             return BadRequest("Valores de prueba no permitidos");
         }
@@ -139,6 +184,12 @@ public class ProfesoresController : ControllerBase
     {
         var profesor = await _context.Profesores.FindAsync(id);
         if (profesor == null) return NotFound();
+        if (await _context.Secciones.AnyAsync(s => s.IdProfesorEncargado == id))
+        {
+            return BadRequest("No se puede eliminar el profesor porque está encargado de una sección");
+        }
+        _context.Entry(profesor).State = EntityState.Deleted;
+        _context.Profesores.Remove(profesor);
         _context.Profesores.Remove(profesor);
         await _context.SaveChangesAsync();
         return NoContent();

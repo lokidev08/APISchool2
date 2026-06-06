@@ -43,16 +43,16 @@ public class CursosController : ControllerBase
     {
         var curso = new Curso
         {
-            Name = request.Name,
+            Nombre = request.Nombre,
             anio = request.anio,
             CreatedBy = request.CreatedBy,
             Status = request.Status
         };
-        if (string.IsNullOrWhiteSpace(curso.Name) || string.IsNullOrWhiteSpace(curso.anio) || string.IsNullOrWhiteSpace(curso.CreatedBy) || string.IsNullOrWhiteSpace(curso.Status))
+        if (string.IsNullOrWhiteSpace(curso.Nombre) || string.IsNullOrWhiteSpace(curso.anio) || string.IsNullOrWhiteSpace(curso.CreatedBy) || string.IsNullOrWhiteSpace(curso.Status))
         {
             return BadRequest("Faltan campos obligatorios");
         }
-        if (curso.Name == "string" || curso.anio == "string" || curso.CreatedBy == "string" || curso.Status == "string")
+        if (curso.Nombre == "string" || curso.anio == "string" || curso.CreatedBy == "string" || curso.Status == "string")
         {
             return BadRequest("Valores de prueba no permitidos");
         }
@@ -60,7 +60,7 @@ public class CursosController : ControllerBase
         {
             return BadRequest("Status debe ser 'Activo' o 'Inactivo'");
         }
-        if (await _context.Cursos.AnyAsync(c => c.Name == curso.Name && c.anio == curso.anio))
+        if (await _context.Cursos.AnyAsync(c => c.Nombre == curso.Nombre && c.anio == curso.anio))
          {
              return BadRequest("Ya existe un curso con el mismo nombre y año");
          }
@@ -75,11 +75,11 @@ public class CursosController : ControllerBase
     public async Task<IActionResult> Put(Guid id, Curso curso)
     {
         if (id != curso.Id) return BadRequest();
-        if (string.IsNullOrWhiteSpace(curso.Name) || string.IsNullOrWhiteSpace(curso.anio) || string.IsNullOrWhiteSpace(curso.CreatedBy) || string.IsNullOrWhiteSpace(curso.Status))
+        if (string.IsNullOrWhiteSpace(curso.Nombre) || string.IsNullOrWhiteSpace(curso.anio) || string.IsNullOrWhiteSpace(curso.CreatedBy) || string.IsNullOrWhiteSpace(curso.Status))
         {
             return BadRequest("Faltan campos obligatorios");
         }
-        if (curso.Name == "string" || curso.anio == "string" || curso.CreatedBy == "string" || curso.Status == "string")
+        if (curso.Nombre == "string" || curso.anio == "string" || curso.CreatedBy == "string" || curso.Status == "string")
         {
             return BadRequest("Valores de prueba no permitidos");
         }
@@ -87,7 +87,7 @@ public class CursosController : ControllerBase
         {
             return BadRequest("Status debe ser 'Activo' o 'Inactivo'");
         }
-        if (await _context.Cursos.AnyAsync(c => c.Name == curso.Name && c.anio == curso.anio))
+        if (await _context.Cursos.AnyAsync(c => c.Nombre == curso.Nombre && c.anio == curso.anio))
         {
             return BadRequest("Ya existe un curso con el mismo nombre y año");
         }
@@ -106,8 +106,13 @@ public class CursosController : ControllerBase
     {
         var curso = await _context.Cursos.FindAsync(id);
         if (curso == null) return NotFound();
+        if (await _context.Secciones.AnyAsync(s => s.IdCurso == id))
+        {
+            return BadRequest("No se puede eliminar el curso porque tiene secciones asociadas");
+        }
         _context.Cursos.Remove(curso);
         await _context.SaveChangesAsync();
         return NoContent();
     }
 }
+

@@ -35,7 +35,7 @@ public class AlumnosController : ControllerBase
     {
         var alumno = new Alumno
         {
-            Name = request.Name,
+            Nombre = request.Nombre,
             Apellido = request.Apellido,
             Sexo = request.Sexo,
             FechaNacimiento = request.FechaNacimiento,
@@ -43,11 +43,11 @@ public class AlumnosController : ControllerBase
             CreatedBy = request.CreatedBy,
             Status = request.Status
         };
-        if (string.IsNullOrWhiteSpace(alumno.Name) || string.IsNullOrWhiteSpace(alumno.Apellido) || string.IsNullOrWhiteSpace(alumno.Sexo) || string.IsNullOrWhiteSpace(alumno.NumeroIdentificacion) || string.IsNullOrWhiteSpace(alumno.CreatedBy) || string.IsNullOrWhiteSpace(alumno.Status))
+        if (string.IsNullOrWhiteSpace(alumno.Nombre) || string.IsNullOrWhiteSpace(alumno.Apellido) || string.IsNullOrWhiteSpace(alumno.Sexo) || string.IsNullOrWhiteSpace(alumno.NumeroIdentificacion) || string.IsNullOrWhiteSpace(alumno.CreatedBy) || string.IsNullOrWhiteSpace(alumno.Status))
         {
             return BadRequest("Faltan campos obligatorios");
         }
-        if (alumno.Name == "string" || alumno.Apellido == "string" || alumno.NumeroIdentificacion == "string" || alumno.CreatedBy == "string" || alumno.Status == "string")
+        if (alumno.Nombre == "string" || alumno.Apellido == "string" || alumno.NumeroIdentificacion == "string" || alumno.CreatedBy == "string" || alumno.Status == "string")
         {
             return BadRequest("Valores de prueba no permitidos");
         }
@@ -82,11 +82,11 @@ public class AlumnosController : ControllerBase
     public async Task<IActionResult> Put(Guid id, Alumno alumno)
     {
         if (id != alumno.Id) return BadRequest();
-        if (string.IsNullOrWhiteSpace(alumno.Name) || string.IsNullOrWhiteSpace(alumno.Apellido) || string.IsNullOrWhiteSpace(alumno.Sexo) || string.IsNullOrWhiteSpace(alumno.NumeroIdentificacion) || string.IsNullOrWhiteSpace(alumno.CreatedBy) || string.IsNullOrWhiteSpace(alumno.Status))
+        if (string.IsNullOrWhiteSpace(alumno.Nombre) || string.IsNullOrWhiteSpace(alumno.Apellido) || string.IsNullOrWhiteSpace(alumno.Sexo) || string.IsNullOrWhiteSpace(alumno.NumeroIdentificacion) || string.IsNullOrWhiteSpace(alumno.CreatedBy) || string.IsNullOrWhiteSpace(alumno.Status))
         {
             return BadRequest("Faltan campos obligatorios");
         }
-        if (alumno.Name == "string" || alumno.Apellido == "string" || alumno.NumeroIdentificacion == "string" || alumno.CreatedBy == "string" || alumno.Status == "string")
+        if (alumno.Nombre == "string" || alumno.Apellido == "string" || alumno.NumeroIdentificacion == "string" || alumno.CreatedBy == "string" || alumno.Status == "string")
         {
             return BadRequest("Valores de prueba no permitidos");
         }

@@ -27,6 +27,7 @@ public class AsignaturaSeccionController : ControllerBase
         {
             IdAsignatura = request.IdAsignatura,
             IdSeccion = request.IdSeccion,
+            IdProfesor = request.IdProfesor,
             CreatedBy = request.CreatedBy,
             Status = request.Status
         };
@@ -54,7 +55,12 @@ public class AsignaturaSeccionController : ControllerBase
         }
         if (await _context.AsignaturasSecciones.AnyAsync(a => a.IdAsignatura == asigSec.IdAsignatura && a.IdSeccion == asigSec.IdSeccion))
         {
-            return BadRequest("Ya existe una asignatura con esa sección");
+            return BadRequest("Esa sección ya tiene asignada esa asignatura");
+        }
+        if (asigSec.IdProfesor != Guid.Empty)
+        {
+            var profesor = await _context.Profesores.FindAsync(asigSec.IdProfesor);
+            if (profesor == null) return BadRequest("Profesor no existe");
         }
         _context.AsignaturasSecciones.Add(asigSec);
         await _context.SaveChangesAsync();

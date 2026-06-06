@@ -33,15 +33,15 @@ public class AsignaturasController : ControllerBase
     {
         var asignatura = new Asignatura
         {
-            Name = request.Name,
+            Nombre = request.Nombre,
             CreatedBy = request.CreatedBy,
             Status = request.Status
         };
-        if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.CreatedBy) || string.IsNullOrWhiteSpace(request.Status))
+        if (string.IsNullOrWhiteSpace(request.Nombre) || string.IsNullOrWhiteSpace(request.CreatedBy) || string.IsNullOrWhiteSpace(request.Status))
         {
             return BadRequest("Faltan campos obligatorios");
         }
-        if (request.Name == "string" || request.CreatedBy == "string" || request.Status == "string")
+        if (request.Nombre == "string" || request.CreatedBy == "string" || request.Status == "string")
         {
             return BadRequest("Valores de prueba no permitidos");
         }
@@ -49,7 +49,7 @@ public class AsignaturasController : ControllerBase
         {
             return BadRequest("Status debe ser 'Activo' o 'Inactivo'");
         }
-        if (await _context.Asignaturas.AnyAsync(a => a.Name == request.Name))
+        if (await _context.Asignaturas.AnyAsync(a => a.Nombre == request.Nombre))
          {
              return BadRequest("El nombre de la asignatura ya existe");
          }
@@ -57,5 +57,40 @@ public class AsignaturasController : ControllerBase
          _context.Asignaturas.Add(asignatura);
          await _context.SaveChangesAsync();
          return CreatedAtAction(nameof(Get), new { id = asignatura.Id }, asignatura);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Put(Guid id, Asignatura asignatura)
+    {
+        if (id != asignatura.Id) return BadRequest();
+        if (string.IsNullOrWhiteSpace(asignatura.Nombre) || string.IsNullOrWhiteSpace(asignatura.CreatedBy) || string.IsNullOrWhiteSpace(asignatura.Status))
+        {
+            return BadRequest("Faltan campos obligatorios");
+        }
+        if (asignatura.Nombre == "string" || asignatura.CreatedBy == "string" || asignatura.Status == "string")
+        {
+            return BadRequest("Valores de prueba no permitidos");
+        }
+        if (asignatura.Status != "Activo" && asignatura.Status != "Inactivo")
+        {
+            return BadRequest("Status debe ser 'Activo' o 'Inactivo'");
+        }
+        _context.Entry(asignatura).State = EntityState.Modified;
+        try { await _context.SaveChangesAsync(); }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!await _context.Asignaturas.AnyAsync(e => e.Id == id)) return NotFound();
+            throw;
+        }
+        return NoContent();
+    }
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var asignatura = await _context.Asignaturas.FindAsync(id);
+        if (asignatura == null) return NotFound();
+        _context.Asignaturas.Remove(asignatura);
+        await _context.SaveChangesAsync();
+        return NoContent();
     }
 } 
